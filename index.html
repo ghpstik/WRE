@@ -1,367 +1,183 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dota 2 — Heroes / Buffs & Debuffs</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dota 2 Heroes - Buffs & Debuffs</title>
   <style>
-    :root{
-      --bg:#0b0c14;
-      --panel:#0f1724;
-      --muted:#9aa6bf;
-      --accent:#f59e0b; /* orange/gold */
-      --glass: rgba(255,255,255,0.03);
-      --card-shadow: 0 6px 24px rgba(3,7,18,0.7);
-      --glass-2: rgba(255,255,255,0.02);
-      --green:#16a34a;
-      --red:#ef4444;
-      --blue:#2563eb;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(180deg,#071026 0%, #081226 40%, #090a16 100%);
-      color:#e6eef8;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      min-height:100vh;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0d0d1a;
+      color: white;
     }
 
-    /* NAVBAR */
-    .navbar{
-      height:68px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 28px;
-      background:linear-gradient(180deg, rgba(10,12,22,0.9), rgba(15,17,32,0.95));
-      border-bottom:1px solid rgba(255,255,255,0.03);
-      backdrop-filter: blur(4px);
-      position:sticky; top:0; z-index:40;
+    /* statusbar */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #141432;
+      padding: 15px 30px;
     }
-    .logo{display:flex;gap:12px;align-items:center}
-    .logo .icon{
-      width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#ffb347,#ffcc33);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b0c14
+    .navbar .logo {
+      font-weight: bold;
+      color: #FFD700;
+      font-size: 20px;
     }
-    .logo h1{font-size:16px;margin:0;color:var(--accent);letter-spacing:0.6px}
-    .nav-actions{display:flex;gap:12px;align-items:center}
-    .nav-actions button{padding:8px 14px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-weight:600}
-    .nav-actions button.active{background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);box-shadow:inset 0 -2px 0 rgba(255,255,255,0.02)}
-
-    /* Page wrapper */
-    .page{display:none;padding:30px 40px;max-width:1200px;margin:0 auto}
-    .page.active{display:block}
-
-    /* Header style for heroes page */
-    .heroes-hero{
-      display:flex;gap:28px;align-items:center;padding:36px;border-radius:12px;background-image:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(3,10,25,0.6)), url('/mnt/data/5c4d92ee-e80c-4061-b82b-fde561a7dee2.png');
-      background-size:cover;background-position:center;box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.03);
+    .navbar .nav-links {
+      display: flex;
+      gap: 10px;
     }
-    .heroes-hero .left{flex:1}
-    .heroes-hero h2{margin:0;color:var(--accent);font-size:34px;letter-spacing:1.4px}
-    .heroes-hero p{color:var(--muted);margin-top:10px;max-width:640px}
-    .heroes-hero .cta{margin-top:12px;background:linear-gradient(90deg,var(--accent),#ff6f00);padding:10px 14px;border-radius:10px;color:#071426;font-weight:700;border:none;cursor:pointer}
-
-    /* filter + search */
-    .controls{display:flex;align-items:center;gap:16px;margin:22px 0}
-    .filters{display:flex;gap:10px}
-    .filters button{padding:8px 12px;border-radius:8px;border:0;background:var(--glass-2);color:var(--muted);cursor:pointer;font-weight:700}
-    .filters button.active{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:var(--accent)}
-    .search{margin-left:auto}
-    .search input{padding:10px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--muted);width:280px}
-
-    .hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:14px}
-    .hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease}
-    .hero-card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,0.6)}
-    .hero-card .thumb{height:120px;border-radius:8px;overflow:hidden;background:#061426}
-    .hero-card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .hero-card .info{padding:10px 6px}
-    .hero-card h3{margin:0;color:var(--accent);font-size:16px}
-    .hero-card p{margin:6px 0 0;color:var(--muted);font-size:13px}
-    .badge{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
-    .badge.str{background:linear-gradient(90deg,#ff6b6b,#ff3b3b);color:#fff}
-    .badge.agi{background:linear-gradient(90deg,#34d399,#10b981);color:#062017}
-    .badge.int{background:linear-gradient(90deg,#60a5fa,#3b82f6);color:#07163b}
-
-    /* hero details */
-    .hero-detail-hero{
-      margin-top:12px;border-radius:12px;overflow:hidden;position:relative;background:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(3,10,25,0.6)), url('/mnt/data/01605b81-dd43-446d-b340-af9675642373.png');background-size:cover;background-position:center;padding:36px;color:#fff;box-shadow:var(--card-shadow);
+    .navbar .nav-links button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
     }
-    .hero-detail-row{display:flex;gap:24px;align-items:center}
-    .hero-portrait{width:150px;height:150px;border-radius:12px;border:4px solid rgba(0,0,0,0.25);overflow:hidden;background:#000}
-    .hero-portrait img{width:100%;height:100%;object-fit:cover}
-    .hero-meta h2{margin:0;font-size:36px;color:var(--accent)}
-    .hero-meta p{margin:8px 0;color:var(--muted)}
+    .nav-red { background: #b91c1c; color: white; }
+    .nav-blue { background: #1d4ed8; color: white; }
+    .nav-yellow { background: #ca8a04; color: black; }
 
-    .stats{display:flex;gap:12px;margin-top:18px}
-    .stat{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;min-width:100px;text-align:center}
-    .stat h4{margin:0;color:#ffd27a}
-    .stat p{margin:6px 0 0;color:var(--muted)}
+    /* Header */
+    .header {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .header h1 {
+      color: #facc15;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    .header p {
+      color: #d1d5db;
+      font-size: 16px;
+    }
 
-    .abilities{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:22px}
-    .ability-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-    .ability-card h4{margin:0;color:#ffb86b}
-    .ability-card p{margin:8px 0 0;color:var(--muted);font-size:14px}
+    /* Buffs & Debuffs Container */
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      width: 350px;
+    }
+    .card h2 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      color: #fbbf24;
+    }
+    .buff-item, .debuff-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .buff-item p, .debuff-item p {
+      margin: 0;
+      font-size: 15px;
+    }
+    .buff-item span {
+      color: #22c55e;
+      font-weight: bold;
+    }
+    .debuff-item span {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 18px;
+      cursor: pointer;
+    }
 
-    /* buffs & debuffs page */
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:22px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-    .panel h3{margin:0;color:var(--accent)}
-    .bp-item{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);margin-top:12px}
-    .bp-item .left{display:flex;gap:12px;align-items:center}
-    .bp-item .icon{width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;font-weight:700}
-    .bp-add{display:block;margin-top:14px;padding:12px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
-    .bp-add.green{background:var(--green);color:#051b0f}
-    .bp-add.red{background:var(--red);color:#fff}
+    /* Add buttons */
+    .add-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .add-buff { background: #22c55e; color: white; }
+    .add-debuff { background: #ef4444; color: white; }
 
-    /* footer */
-    footer{padding:20px;text-align:center;color:var(--muted);margin-top:36px}
-
-    @media (max-width:900px){
-      .two-col{grid-template-columns:1fr}
-      .hero-detail-row{flex-direction:column;align-items:flex-start}
+    /* Responsive */
+    @media(max-width: 800px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .card {
+        width: 90%;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="logo">
-      <div class="icon">D2</div>
-      <h1>DOTA 2 HEROES</h1>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo">DOTA 2 HEROES</div>
+    <div class="nav-links">
+      <button class="nav-red">Buffs & Debuffs</button>
+      <button class="nav-blue">Heroes</button>
+      <button class="nav-yellow">Hero Details</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Buffs & Debuffs Manager</h1>
+    <p>Manage hero enhancements and weakening effects</p>
+  </div>
+
+  <!-- Buffs & Debuffs -->
+  <div class="container">
+    <!-- Buffs -->
+    <div class="card">
+      <h2>Active Buffs</h2>
+      <div class="buff-item">
+        <p>Damage Amplification <span>+25% Attack Damage</span></p>
+        <button class="remove-btn">×</button>
+      </div>
+      <div class="buff-item">
+        <p>Speed Boost <span>+30% Movement Speed</span></p>
+        <button class="remove-btn">×</button>
+      </div>
+      <button class="add-btn add-buff">+ Add New Buff</button>
     </div>
 
-    <div class="nav-actions" role="navigation" aria-label="Main navigation">
-      <button data-page="buffs" id="nav-buffs">Buffs & Debuffs</button>
-      <button data-page="heroes" id="nav-heroes" class="active">Heroes</button>
-      <button data-page="hero-details" id="nav-hero-details">Hero Details</button>
+    <!--Debuffs -->
+    <div class="card">
+      <h2>Active Debuffs</h2>
+      <div class="debuff-item">
+        <p>Armor Reduction <span>-15 Armor</span></p>
+        <button class="remove-btn">×</button>
+      </div>
+      <div class="debuff-item">
+        <p>Slow <span>-40% Movement Speed</span></p>
+        <button class="remove-btn">×</button>
+      </div>
+      <button class="add-btn add-debuff">+ Add New Debuff</button>
     </div>
-  </nav>
+  </div>
 
-  <main>
-    <section id="heroes" class="page active">
-      <div class="heroes-hero">
-        <div class="left">
-          <h2>CHOOSE YOUR HERO</h2>
-          <p>Master over 120 unique heroes, each with their own abilities, playstyles, and strategic roles in the ultimate battle arena.</p>
-          <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
-            <button class="cta">123 Heroes Available</button>
-            <div style="color:var(--muted);font-weight:700;margin-left:12px">Filter by:</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <div class="filters" role="tablist">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="str">Strength</button>
-          <button class="filter-btn" data-filter="int">Intelligence</button>
-          <button class="filter-btn" data-filter="agi">Agility</button>
-        </div>
-
-        <div class="search">
-          <input type="search" id="search" placeholder="Search heroes..." aria-label="Search heroes" />
-        </div>
-      </div>
-
-      <div class="hero-grid" id="heroGrid"></div>
-
-      <div style="text-align:center;margin-top:22px">
-        <button id="loadMore" style="padding:12px 20px;border-radius:10px;border:0;background:var(--accent);color:#071426;font-weight:800;cursor:pointer">Load More Heroes</button>
-      </div>
-    </section>
-
-    <section id="hero-details" class="page">
-      <button id="backToHeroes" style="margin-bottom:12px;padding:8px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--muted);cursor:pointer">← Back to Heroes</button>
-
-      <div class="hero-detail-hero" id="heroDetailHero">
-        <div class="hero-detail-row">
-          <div class="hero-portrait"><img id="detailImg" src="/mnt/data/01605b81-dd43-446d-b340-af9675642373.png" alt="hero"/></div>
-          <div class="hero-meta">
-            <h2 id="detailName">PUDGE</h2>
-            <p id="detailSubtitle">The Butcher — Strength</p>
-            <div class="stats" id="detailStats">
-              <div class="stat"><h4 id="st-health">700</h4><p>Health</p></div>
-              <div class="stat"><h4 id="st-mana">243</h4><p>Mana</p></div>
-              <div class="stat"><h4 id="st-damage">58</h4><p>Damage</p></div>
-              <div class="stat"><h4 id="st-armor">1.7</h4><p>Armor</p></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:22px">
-          <h3 style="color:var(--accent);margin:0">Abilities</h3>
-          <div class="abilities" id="abilitiesList">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="buffs" class="page">
-      <h2 style="color:var(--accent);margin:0 0 8px 0;font-size:34px">Buffs & Debuffs Manager</h2>
-      <p style="color:var(--muted);margin-top:8px">Manage hero enhancements and weakening effects</p>
-
-      <div style="height:20px"></div>
-
-      <div class="two-col">
-        <div class="panel">
-          <h3>Active Buffs</h3>
-          <div id="buffList">
-            <div class="bp-item">
-              <div class="left"><div class="icon">⚔️</div><div><strong>Damage Amplification</strong><div style="color:var(--muted);font-size:13px">+25% Attack Damage</div></div></div>
-              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
-            </div>
-
-            <div class="bp-item">
-              <div class="left"><div class="icon">🏃</div><div><strong>Speed Boost</strong><div style="color:var(--muted);font-size:13px">+30% Movement Speed</div></div></div>
-              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
-            </div>
-          </div>
-
-          <button class="bp-add green" id="addBuff">+ Add New Buff</button>
-        </div>
-
-        <div class="panel">
-          <h3 style="color:#ff9b9b">Active Debuffs</h3>
-          <div id="debuffList">
-            <div class="bp-item">
-              <div class="left"><div class="icon">🛡️</div><div><strong>Armor Reduction</strong><div style="color:var(--muted);font-size:13px">-15 Armor</div></div></div>
-              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
-            </div>
-
-            <div class="bp-item">
-              <div class="left"><div class="icon">❄️</div><div><strong>Slow</strong><div style="color:var(--muted);font-size:13px">-40% Movement Speed</div></div></div>
-              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
-            </div>
-          </div>
-
-          <button class="bp-add red" id="addDebuff">+ Add New Debuff</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    © 2024 Valve Corporation. All rights reserved. — Demo by you
-  </footer>
-
-  <script>
-    const navButtons = document.querySelectorAll('.nav-actions button');
-    const pages = document.querySelectorAll('.page');
-    function showPage(name){
-      pages.forEach(p=>{ p.classList.remove('active'); if(p.id===name) p.classList.add('active'); });
-      navButtons.forEach(b=>{ b.classList.toggle('active', b.dataset.page===name); });
-      document.getElementById('nav-hero-details').classList.toggle('active', name==='hero-details');
-    }
-    navButtons.forEach(btn=>{ btn.addEventListener('click', ()=>{ showPage(btn.dataset.page); }) });
-
-    const heroes = [
-      {id:'pudge',name:'Pudge', role:'The Butcher', attr:'str', img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png', rating:4.2, difficulty:2, stats:{health:700,mana:243,damage:58,armor:1.7}, abilities:[
-        {name:'Meat Hook',desc:'Launches a bloody hook toward a unit or location. The hook will snag the first unit it encounters.',note:'Mana: 110 · CD: 14s'},
-        {name:'Rot',desc:'A toxic cloud that deals damage and slows movement. Pudge takes damage as well.',note:'Self Damage · Toggle'},
-        {name:'Flesh Heap',desc:'Gives Pudge magic resistance and bonus strength that increases each time he kills an enemy Hero.',note:'Passive · Stacks'},
-        {name:'Dismember',desc:'Pudge charms and channels on an enemy unit, dealing damage over time and disabling it.',note:'Mana: 100 · CD: 30s'}
-      ]},
-      {id:'invoker',name:'Invoker',role:'Arsenal Magus',attr:'int',img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png',rating:4.8,difficulty:5,stats:{health:520,mana:600,damage:62,armor:2.0}},
-      {id:'juggernaut',name:'Juggernaut',role:'Yurnero',attr:'agi',img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png',rating:4.6,difficulty:3,stats:{health:610,mana:220,damage:78,armor:3.2}},
-      {id:'axe',name:'Axe',role:'Mogul Khan',attr:'str',img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png',rating:4.3,difficulty:2,stats:{health:720,mana:234,damage:64,armor:5.0}},
-      {id:'crystal_maiden',name:'Crystal Maiden',role:'Rylai',attr:'int',img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png',rating:4.1,difficulty:2,stats:{health:480,mana:300,damage:46,armor:1.1}},
-      {id:'phantom_assassin',name:'Phantom Assassin',role:'Mortred',attr:'agi',img:'/mnt/data/01605b81-dd43-446d-b340-af9675642373.png',rating:4.5,difficulty:4,stats:{health:560,mana:200,damage:84,armor:3.1}},
-    ];
-    const heroGrid = document.getElementById('heroGrid');
-    function renderHeroes(list){
-      heroGrid.innerHTML = '';
-      list.forEach(h=>{
-        const card = document.createElement('div'); card.className='hero-card';
-        card.innerHTML = `
-          <div class="thumb"><img src="${h.img}" alt="${h.name}"/></div>
-          <div class="info">
-            <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge ${h.attr}">${h.attr.toUpperCase()}</span><div style="color:var(--muted);font-weight:800">★ ${h.rating || '—'}</div></div>
-            <h3>${h.name}</h3>
-            <p>${h.role} · Difficulty: ${'★'.repeat(h.difficulty||3)}</p>
-          </div>
-        `;
-        card.addEventListener('click', ()=>{ openHero(h.id); });
-        heroGrid.appendChild(card);
-      })
-    }
-    renderHeroes(heroes.slice(0,6));
-
-    document.getElementById('loadMore').addEventListener('click', ()=>{
-      renderHeroes(heroes);
-      document.getElementById('loadMore').innerText='All Heroes Loaded';
-      document.getElementById('loadMore').disabled=true;
-    });
-    const searchInput = document.getElementById('search');
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    let currentFilter='all';
-    filterBtns.forEach(b=>b.addEventListener('click', ()=>{ filterBtns.forEach(x=>x.classList.remove('active')); b.classList.add('active'); currentFilter=b.dataset.filter; applyFilters(); }));
-    searchInput.addEventListener('input', applyFilters);
-    function applyFilters(){
-      const q = searchInput.value.trim().toLowerCase();
-      let filtered = heroes.filter(h=> (currentFilter==='all' || (currentFilter==='str'&&h.attr==='str') || (currentFilter==='agi'&&h.attr==='agi') || (currentFilter==='int'&&h.attr==='int')));
-      if(q) filtered = filtered.filter(h=> h.name.toLowerCase().includes(q) || (h.role && h.role.toLowerCase().includes(q)));
-      renderHeroes(filtered);
-    }
-
-    function openHero(id){
-      const hero = heroes.find(h=>h.id===id);
-      if(!hero) return;
-      document.getElementById('detailName').innerText = hero.name.toUpperCase();
-      document.getElementById('detailSubtitle').innerText = `${hero.role} — ${hero.attr==='str'?'Strength':hero.attr==='agi'?'Agility':'Intelligence'}`;
-      document.getElementById('detailImg').src = hero.img;
-      document.getElementById('st-health').innerText = hero.stats?.health ?? '—';
-      document.getElementById('st-mana').innerText = hero.stats?.mana ?? '—';
-      document.getElementById('st-damage').innerText = hero.stats?.damage ?? '—';
-      document.getElementById('st-armor').innerText = hero.stats?.armor ?? '—';
-
-      const abilitiesList = document.getElementById('abilitiesList'); abilitiesList.innerHTML='';
-      if(hero.abilities){
-        hero.abilities.forEach(a=>{
-          const el = document.createElement('div'); el.className='ability-card';
-          el.innerHTML = `<h4>${a.name}</h4><p>${a.desc}</p><div style="margin-top:8px;color:var(--muted);font-weight:700">${a.note || ''}</div>`;
-          abilitiesList.appendChild(el);
-        })
-      } else {
-        abilitiesList.innerHTML = '<div style="color:var(--muted)">No abilities data</div>';
-      }
-
-      showPage('hero-details');
-    }
-
-    document.getElementById('backToHeroes').addEventListener('click', ()=>{ showPage('heroes'); });
-
-    document.getElementById('nav-hero-details').addEventListener('click', ()=>{ showPage('hero-details'); });
-    document.getElementById('nav-heroes').addEventListener('click', ()=>{ showPage('heroes'); });
-    document.getElementById('nav-buffs').addEventListener('click', ()=>{ showPage('buffs'); });
-
-    document.getElementById('addBuff').addEventListener('click', ()=>{
-      const title = prompt('Название баффа (например: Возбуждение)');
-      const note = prompt('Описание/эффект (например: +10% урона)');
-      if(title){
-        const list = document.getElementById('buffList');
-        const item = document.createElement('div'); item.className='bp-item';
-        item.innerHTML = `<div class="left"><div class="icon">✨</div><div><strong>${escapeHtml(title)}</strong><div style="color:var(--muted);font-size:13px">${escapeHtml(note||'')}</div></div></div><div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>`;
-        list.appendChild(item);
-        item.querySelector('.remove').addEventListener('click', ()=>item.remove());
-      }
-    });
-    document.getElementById('addDebuff').addEventListener('click', ()=>{
-      const title = prompt('Название дебаффа (например: Замедление)');
-      const note = prompt('Описание/эффект (например: -20% скорость)');
-      if(title){
-        const list = document.getElementById('debuffList');
-        const item = document.createElement('div'); item.className='bp-item';
-        item.innerHTML = `<div class="left"><div class="icon">❗</div><div><strong>${escapeHtml(title)}</strong><div style="color:var(--muted);font-size:13px">${escapeHtml(note||'')}</div></div></div><div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>`;
-        list.appendChild(item);
-        item.querySelector('.remove').addEventListener('click', ()=>item.remove());
-      }
-    });
-
-    document.querySelectorAll('.panel .remove').forEach(b=>b.addEventListener('click', e=>e.target.closest('.bp-item').remove()));
-
-    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  </script>
 </body>
 </html>
+```
