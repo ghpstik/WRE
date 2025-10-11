@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>meeponegeroi — Dota 2 Heroes</title>
+  <style>
+    :root{
+      --bg:#0b0c14;
+      --panel:#0f1724;
+      --muted:#9aa6bf;
+      --accent:#f59e0b;
+      --glass: rgba(255,255,255,0.03);
+      --card-shadow: 0 6px 24px rgba(3,7,18,0.7);
+      --glass-2: rgba(255,255,255,0.02);
+      --green:#16a34a;
+      --red:#ef4444;
+      --blue:#2563eb;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg,#071026 0%, #081226 40%, #090a16 100%);
+      color:#e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100vh;
+    }
+
+    /* NAVBAR */
+    .navbar{
+      height:68px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 28px;
+      background:linear-gradient(180deg, rgba(10,12,22,0.9), rgba(15,17,32,0.95));
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      backdrop-filter: blur(4px);
+      position:sticky; top:0; z-index:40;
+    }
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .icon{
+      width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#ffb347,#ffcc33);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b0c14
+    }
+    .logo h1{font-size:16px;margin:0;color:var(--accent);letter-spacing:0.6px}
+    .nav-actions{display:flex;gap:12px;align-items:center}
+    .nav-actions button{padding:8px 14px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-weight:600}
+    .nav-actions button.active{background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);box-shadow:inset 0 -2px 0 rgba(255,255,255,0.02)}
+
+    /* Page wrapper */
+    .page{display:none;padding:30px 40px;max-width:1200px;margin:0 auto}
+    .page.active{display:block}
+
+    /* Header style for heroes page */
+    .heroes-hero{
+      display:flex;gap:28px;align-items:center;padding:36px;border-radius:12px;background-image:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(3,10,25,0.6)), url('/mnt/data/5c4d92ee-e80c-4061-b82b-fde561a7dee2.png');
+      background-size:cover;background-position:center;box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.03);
+    }
+    .heroes-hero .left{flex:1}
+    .heroes-hero h2{margin:0;color:var(--accent);font-size:34px;letter-spacing:1.4px}
+    .heroes-hero p{color:var(--muted);margin-top:10px;max-width:640px}
+    .heroes-hero .cta{margin-top:12px;background:linear-gradient(90deg,var(--accent),#ff6f00);padding:10px 14px;border-radius:10px;color:#071426;font-weight:700;border:none;cursor:pointer}
+
+    /* filter + search */
+    .controls{display:flex;align-items:center;gap:16px;margin:22px 0}
+    .filters{display:flex;gap:10px}
+    .filters button{padding:8px 12px;border-radius:8px;border:0;background:var(--glass-2);color:var(--muted);cursor:pointer;font-weight:700}
+    .filters button.active{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:var(--accent)}
+    .search{margin-left:auto}
+    .search input{padding:10px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--muted);width:280px}
+
+    .hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:14px}
+    .hero-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease}
+    .hero-card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,0.6)}
+    .hero-card .thumb{height:120px;border-radius:8px;overflow:hidden;background:#061426;display:flex;align-items:center;justify-content:center}
+    .hero-card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .hero-card .info{padding:10px 6px}
+    .hero-card h3{margin:0;color:var(--accent);font-size:16px}
+    .hero-card p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
+    .badge.str{background:linear-gradient(90deg,#ff6b6b,#ff3b3b);color:#fff}
+    .badge.agi{background:linear-gradient(90deg,#34d399,#10b981);color:#062017}
+    .badge.int{background:linear-gradient(90deg,#60a5fa,#3b82f6);color:#07163b}
+
+    /* hero details */
+    .hero-detail-hero{
+      margin-top:12px;border-radius:12px;overflow:hidden;position:relative;background:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(3,10,25,0.6)), url('/mnt/data/01605b81-dd43-446d-b340-af9675642373.png');background-size:cover;background-position:center;padding:36px;color:#fff;box-shadow:var(--card-shadow);
+    }
+    .hero-detail-row{display:flex;gap:24px;align-items:center}
+    .hero-portrait{width:150px;height:150px;border-radius:12px;border:4px solid rgba(0,0,0,0.25);overflow:hidden;background:#000}
+    .hero-portrait img{width:100%;height:100%;object-fit:cover}
+    .hero-meta h2{margin:0;font-size:36px;color:var(--accent)}
+    .hero-meta p{margin:8px 0;color:var(--muted)}
+
+    .stats{display:flex;gap:12px;margin-top:18px}
+    .stat{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;min-width:100px;text-align:center}
+    .stat h4{margin:0;color:#ffd27a}
+    .stat p{margin:6px 0 0;color:var(--muted)}
+
+    .abilities{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:22px}
+    .ability-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .ability-card h4{margin:0;color:#ffb86b}
+    .ability-card p{margin:8px 0 0;color:var(--muted);font-size:14px}
+
+    /* buffs & debuffs page */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:22px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .panel h3{margin:0;color:var(--accent)}
+    .bp-item{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);margin-top:12px}
+    .bp-item .left{display:flex;gap:12px;align-items:center}
+    .bp-item .icon{width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;font-weight:700}
+    .bp-add{display:block;margin-top:14px;padding:12px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+    .bp-add.green{background:var(--green);color:#051b0f}
+    .bp-add.red{background:var(--red);color:#fff}
+
+    /* footer */
+    footer{padding:20px;text-align:center;color:var(--muted);margin-top:36px}
+
+    @media (max-width:900px){
+      .two-col{grid-template-columns:1fr}
+      .hero-detail-row{flex-direction:column;align-items:flex-start}
+      .hero-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+    }
+
+    /* placeholder style for broken images */
+    .img-placeholder {
+      width:100%;
+      height:120px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#0a1320;
+      color:var(--muted);
+      font-size:13px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">
+      <div class="icon">me</div>
+      <h1>meeponegeroi</h1>
+    </div>
+
+    <div class="nav-actions" role="navigation" aria-label="Main navigation">
+      <button type="button" data-page="buffs" id="nav-buffs">Buffs & Debuffs</button>
+      <button type="button" data-page="heroes" id="nav-heroes" class="active">Heroes</button>
+      <button type="button" data-page="hero-details" id="nav-hero-details">Hero Details</button>
+    </div>
+  </nav>
+
+  <main>
+    <section id="heroes" class="page active">
+      <div class="heroes-hero">
+        <div class="left">
+          <h2>CHOOSE YOUR HERO</h2>
+          <p>Master over 120 unique heroes, each with their own abilities, playstyles, and strategic roles in the ultimate battle arena.</p>
+          <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+            <button class="cta">123 Heroes Available</button>
+            <div style="color:var(--muted);font-weight:700;margin-left:12px">Filter by:</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="filters" role="tablist">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="str">Strength</button>
+          <button class="filter-btn" data-filter="int">Intelligence</button>
+          <button class="filter-btn" data-filter="agi">Agility</button>
+        </div>
+
+        <div class="search">
+          <input type="search" id="search" placeholder="Search heroes..." aria-label="Search heroes" />
+        </div>
+      </div>
+
+      <div class="hero-grid" id="heroGrid"></div>
+
+      <div style="text-align:center;margin-top:22px">
+        <button id="loadMore" style="padding:12px 20px;border-radius:10px;border:0;background:var(--accent);color:#071426;font-weight:800;cursor:pointer">Load More Heroes</button>
+      </div>
+    </section>
+
+    <section id="hero-details" class="page">
+      <button id="backToHeroes" style="margin-bottom:12px;padding:8px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--muted);cursor:pointer">← Back to Heroes</button>
+
+      <div class="hero-detail-hero" id="heroDetailHero">
+        <div class="hero-detail-row">
+          <div class="hero-portrait">
+            <img id="detailImg" src="/mnt/data/09e67bf0-8db8-42ca-a1ed-abb0ea6dfbf6.png" alt="hero"
+              onerror="this.style.display='none'; this.parentElement.classList.add('img-placeholder'); this.parentElement.innerHTML='Image not available'">
+          </div>
+          <div class="hero-meta">
+            <h2 id="detailName">PUDGE</h2>
+            <p id="detailSubtitle">The Butcher — Strength</p>
+            <div class="stats" id="detailStats">
+              <div class="stat"><h4 id="st-health">700</h4><p>Health</p></div>
+              <div class="stat"><h4 id="st-mana">243</h4><p>Mana</p></div>
+              <div class="stat"><h4 id="st-damage">58</h4><p>Damage</p></div>
+              <div class="stat"><h4 id="st-armor">1.7</h4><p>Armor</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:22px">
+          <h3 style="color:var(--accent);margin:0">Abilities</h3>
+          <div class="abilities" id="abilitiesList">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="buffs" class="page">
+      <h2 style="color:var(--accent);margin:0 0 8px 0;font-size:34px">Buffs & Debuffs Manager</h2>
+      <p style="color:var(--muted);margin-top:8px">Manage hero enhancements and weakening effects</p>
+
+      <div style="height:20px"></div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Active Buffs</h3>
+          <div id="buffList">
+            <div class="bp-item">
+              <div class="left"><div class="icon">⚔️</div><div><strong>Damage Amplification</strong><div style="color:var(--muted);font-size:13px">+25% Attack Damage</div></div></div>
+              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
+            </div>
+
+            <div class="bp-item">
+              <div class="left"><div class="icon">🏃</div><div><strong>Speed Boost</strong><div style="color:var(--muted);font-size:13px">+30% Movement Speed</div></div></div>
+              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
+            </div>
+          </div>
+
+          <button class="bp-add green" id="addBuff">+ Add New Buff</button>
+        </div>
+
+        <div class="panel">
+          <h3 style="color:#ff9b9b">Active Debuffs</h3>
+          <div id="debuffList">
+            <div class="bp-item">
+              <div class="left"><div class="icon">🛡️</div><div><strong>Armor Reduction</strong><div style="color:var(--muted);font-size:13px">-15 Armor</div></div></div>
+              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
+            </div>
+
+            <div class="bp-item">
+              <div class="left"><div class="icon">❄️</div><div><strong>Slow</strong><div style="color:var(--muted);font-size:13px">-40% Movement Speed</div></div></div>
+              <div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>
+            </div>
+          </div>
+
+          <button class="bp-add red" id="addDebuff">+ Add New Debuff</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2024 Valve Corporation. All rights reserved. — Demo by meeponegeroi
+  </footer>
+
+  <script>
+    /* ---- Robust navigation: ensure buttons have data-page and exist ---- */
+    const navButtons = Array.from(document.querySelectorAll('.nav-actions button[data-page]'));
+    const pages = Array.from(document.querySelectorAll('.page'));
+
+    function showPage(name) {
+      // hide all pages
+      pages.forEach(p => p.classList.remove('active'));
+      // find target page
+      const target = document.getElementById(name);
+      if (target) target.classList.add('active');
+      // update nav active state
+      navButtons.forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-page') === name);
+      });
+    }
+
+    // attach listeners (use buttons that actually have data-page)
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const page = btn.getAttribute('data-page');
+        if (page && document.getElementById(page)) {
+          showPage(page);
+          e.preventDefault();
+        } else {
+          console.warn('No page with id:', page);
+        }
+      });
+    });
+
+    // Back button inside details
+    const backBtn = document.getElementById('backToHeroes');
+    if (backBtn) backBtn.addEventListener('click', () => showPage('heroes'));
+
+    // ---- heroes data (images you've provided + given URLs) ----
+    const heroes = [
+      {
+        id:'pudge',
+        name:'Pudge',
+        role:'The Butcher',
+        attr:'str',
+        img:'/mnt/data/09e67bf0-8db8-42ca-a1ed-abb0ea6dfbf6.png',
+        rating:4.2,
+        difficulty:2,
+        stats:{health:700,mana:243,damage:58,armor:1.7},
+        abilities:[
+          {name:'Meat Hook',desc:'Launches a bloody hook toward a unit or location. The hook will snag the first unit it encounters.',note:'Mana: 110 · CD: 14s'},
+          {name:'Rot',desc:'A toxic cloud that deals intense damage and slows movement. Pudge takes damage as well.',note:'Self Damage · Toggle'},
+          {name:'Flesh Heap',desc:'Gives Pudge magic resistance and bonus strength that increases each time he kills an enemy Hero.',note:'Passive · Stacks'},
+          {name:'Dismember',desc:'Pudge charms and channels on an enemy unit, dealing damage over time and disabling it.',note:'Mana: 100 · CD: 30s'}
+        ]
+      },
+      {
+        id:'invoker',
+        name:'Invoker',
+        role:'Arsenal Magus',
+        attr:'int',
+        img:'/mnt/data/20bd3d12-24ab-424e-94ce-290f85c580b2.png',
+        rating:4.8,
+        difficulty:5,
+        stats:{health:520,mana:600,damage:62,armor:2.0}
+      },
+      {
+        id:'juggernaut',
+        name:'Juggernaut',
+        role:'Yurnero',
+        attr:'agi',
+        img:'/mnt/data/6a81a391-ad54-4f20-a9bd-8fb9a2675fe2.png',
+        rating:4.6,
+        difficulty:3,
+        stats:{health:610,mana:220,damage:78,armor:3.2}
+      },
+      {
+        id:'axe',
+        name:'Axe',
+        role:'Mogul Khan',
+        attr:'str',
+        img:'https://static.wikia.nocookie.net/dota2_gamepedia/images/2/23/Axe_icon.png/revision/latest?cb=20160411211422',
+        rating:4.3,
+        difficulty:2,
+        stats:{health:720,mana:234,damage:64,armor:5.0}
+      },
+      {
+        id:'crystal_maiden',
+        name:'Crystal Maiden',
+        role:'Rylai',
+        attr:'int',
+        img:'https://static.wikia.nocookie.net/dota2_gamepedia/images/2/27/Crystal_Maiden_icon.png/revision/latest?cb=20160411214805',
+        rating:4.1,
+        difficulty:2,
+        stats:{health:480,mana:300,damage:46,armor:1.1}
+      },
+      {
+        id:'phantom_assassin',
+        name:'Phantom Assassin',
+        role:'Mortred',
+        attr:'agi',
+        img:'https://static.wikia.nocookie.net/dota2_gamepedia/images/8/8e/Phantom_Assassin_icon.png/revision/latest?cb=20160411214013',
+        rating:4.5,
+        difficulty:4,
+        stats:{health:560,mana:200,damage:84,armor:3.1}
+      }
+    ];
+
+    // render heroes
+    const heroGrid = document.getElementById('heroGrid');
+    function renderHeroes(list) {
+      heroGrid.innerHTML = '';
+      list.forEach(h => {
+        const card = document.createElement('div');
+        card.className = 'hero-card';
+        const imgHtml = h.img
+          ? `<img src="${h.img}" alt="${h.name}" onerror="this.style.display='none'; this.parentElement.classList.add('img-placeholder'); this.parentElement.innerHTML='Image not available'">`
+          : '';
+        card.innerHTML = `
+          <div class="thumb">${imgHtml}</div>
+          <div class="info">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="badge ${h.attr}">${h.attr.toUpperCase()}</span>
+              <div style="color:var(--muted);font-weight:800">★ ${h.rating || '—'}</div>
+            </div>
+            <h3>${h.name}</h3>
+            <p>${h.role} · Difficulty: ${'★'.repeat(h.difficulty||3)}</p>
+          </div>
+        `;
+        card.addEventListener('click', () => openHero(h.id));
+        heroGrid.appendChild(card);
+      });
+    }
+
+    renderHeroes(heroes.slice(0,6));
+
+    // load more
+    const loadMoreBtn = document.getElementById('loadMore');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', () => {
+        renderHeroes(heroes);
+        loadMoreBtn.innerText = 'All Heroes Loaded';
+        loadMoreBtn.disabled = true;
+      });
+    }
+
+    // search + filters
+    const searchInput = document.getElementById('search');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    let currentFilter = 'all';
+    filterBtns.forEach(b => b.addEventListener('click', () => {
+      filterBtns.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentFilter = b.dataset.filter;
+      applyFilters();
+    }));
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+    function applyFilters() {
+      const q = (searchInput?.value || '').trim().toLowerCase();
+      let filtered = heroes.filter(h => (currentFilter === 'all' ||
+        (currentFilter === 'str' && h.attr === 'str') ||
+        (currentFilter === 'agi' && h.attr === 'agi') ||
+        (currentFilter === 'int' && h.attr === 'int')));
+      if (q) filtered = filtered.filter(h => h.name.toLowerCase().includes(q) || (h.role && h.role.toLowerCase().includes(q)));
+      renderHeroes(filtered);
+    }
+
+    // open hero detail
+    function openHero(id) {
+      const hero = heroes.find(h => h.id === id);
+      if (!hero) return;
+      document.getElementById('detailName').innerText = hero.name.toUpperCase();
+      document.getElementById('detailSubtitle').innerText = `${hero.role} — ${hero.attr === 'str' ? 'Strength' : hero.attr === 'agi' ? 'Agility' : 'Intelligence'}`;
+      const imgEl = document.getElementById('detailImg');
+      imgEl.src = hero.img || '';
+      imgEl.style.display = hero.img ? 'block' : 'none';
+      document.getElementById('st-health').innerText = hero.stats?.health ?? '—';
+      document.getElementById('st-mana').innerText = hero.stats?.mana ?? '—';
+      document.getElementById('st-damage').innerText = hero.stats?.damage ?? '—';
+      document.getElementById('st-armor').innerText = hero.stats?.armor ?? '—';
+
+      const abilitiesList = document.getElementById('abilitiesList');
+      abilitiesList.innerHTML = '';
+      if (hero.abilities) {
+        hero.abilities.forEach(a => {
+          const el = document.createElement('div');
+          el.className = 'ability-card';
+          el.innerHTML = `<h4>${a.name}</h4><p>${a.desc}</p><div style="margin-top:8px;color:var(--muted);font-weight:700">${a.note || ''}</div>`;
+          abilitiesList.appendChild(el);
+        });
+      } else {
+        abilitiesList.innerHTML = '<div style="color:var(--muted)">No abilities data</div>';
+      }
+
+      showPage('hero-details');
+    }
+
+    // buffs add/remove (unchanged)
+    document.getElementById('addBuff')?.addEventListener('click', () => {
+      const title = prompt('Название баффа (например: Возбуждение)');
+      const note = prompt('Описание/эффект (например: +10% урона)');
+      if (title) {
+        const list = document.getElementById('buffList');
+        const item = document.createElement('div'); item.className = 'bp-item';
+        item.innerHTML = `<div class="left"><div class="icon">✨</div><div><strong>${escapeHtml(title)}</strong><div style="color:var(--muted);font-size:13px">${escapeHtml(note||'')}</div></div></div><div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>`;
+        list.appendChild(item);
+        item.querySelector('.remove').addEventListener('click', () => item.remove());
+      }
+    });
+    document.getElementById('addDebuff')?.addEventListener('click', () => {
+      const title = prompt('Название дебаффа (например: Замедление)');
+      const note = prompt('Описание/эффект (например: -20% скорость)');
+      if (title) {
+        const list = document.getElementById('debuffList');
+        const item = document.createElement('div'); item.className = 'bp-item';
+        item.innerHTML = `<div class="left"><div class="icon">❗</div><div><strong>${escapeHtml(title)}</strong><div style="color:var(--muted);font-size:13px">${escapeHtml(note||'')}</div></div></div><div><button class="remove" style="background:none;border:0;color:var(--red);font-weight:800;cursor:pointer">✕</button></div>`;
+        list.appendChild(item);
+        item.querySelector('.remove').addEventListener('click', () => item.remove());
+      }
+    });
+
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // ensure initial state
+    showPage('heroes');
+  </script>
+</body>
+</html>
